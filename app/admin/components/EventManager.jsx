@@ -52,7 +52,9 @@ export default function EventManager({ status, title }) {
     featured: false,
     video_url: "",
     featured_icon_url: "",
-    website_url: ""
+    website_url: "",
+    has_subevents: false,
+    sub_events: [] // Array of { title: "", date: "" }
   });
   
   const [iconFile, setIconFile] = useState(null);
@@ -65,15 +67,25 @@ export default function EventManager({ status, title }) {
 
   const fetchEvents = async () => {
     setLoading(true);
+    // Fetch all events for this status
     const { data, error } = await supabase
       .from("events")
       .select("*")
       .eq("status", status)
       .order("date", { ascending: status === "upcoming" });
 
-    if (!error) {
-      setEvents(data || []);
-      setFilteredEvents(data || []);
+    if (!error && data) {
+      // Group sub-events by parent_id
+      const mainEvents = data.filter(e => !e.parent_id);
+      const subEvents = data.filter(e => e.parent_id);
+      
+      const combined = mainEvents.map(main => ({
+        ...main,
+        sub_events: subEvents.filter(sub => sub.parent_id === main.id)
+      }));
+
+      setEvents(combined);
+      setFilteredEvents(combined);
     }
     setLoading(false);
   };
@@ -139,7 +151,9 @@ export default function EventManager({ status, title }) {
       featured: false,
       video_url: "",
       featured_icon_url: "",
-      website_url: ""
+      website_url: "",
+      has_subevents: false,
+      sub_events: []
     });
     setImageFile(null);
     setImagePreview(null);
@@ -164,7 +178,9 @@ export default function EventManager({ status, title }) {
       featured: event.featured || false,
       video_url: event.video_url || "",
       featured_icon_url: event.featured_icon_url || "",
-      website_url: event.website_url || ""
+      website_url: event.website_url || "",
+      has_subevents: (event.sub_events && event.sub_events.length > 0) || false,
+      sub_events: event.sub_events || []
     });
     setImagePreview(event.image);
     setIconPreview(event.featured_icon_url);
@@ -190,38 +206,97 @@ export default function EventManager({ status, title }) {
         ? formData.highlights.split(",").map(h => h.trim()).filter(h => h)
         : [];
 
+      const { sub_events, has_subevents, ...coreData } = formData;
+      
       const eventData = {
-        ...formData,
+        ...coreData,
         image: imageUrl,
         featured_icon_url: featuredIconUrl,
         highlights: highlightsArray,
         status: status,
       };
 
+      let mainEventId = editingEvent?.id;
       let error;
+
       if (editingEvent) {
         const { error: err } = await supabase.from("events").update(eventData).eq("id", editingEvent.id);
         error = err;
       } else {
-        const { error: err } = await supabase.from("events").insert([eventData]);
+        const { data: newEvent, error: err } = await supabase.from("events").insert([eventData]).select().single();
         error = err;
+        if (newEvent) mainEventId = newEvent.id;
       }
 
       if (error) {
         showToast("error", error.message);
-      } else {
-        showToast("success", editingEvent ? "Event updated successfully" : "Event created successfully");
-        setTimeout(() => {
-          setShowModal(false);
-          resetForm();
-          fetchEvents();
-        }, 500);
+        setSubmitting(false);
+        return;
       }
+
+      // Handle sub-events
+      if (mainEventId) {
+        // If editing, we might want to delete old sub-events and re-add or sync.
+        // For simplicity, let's delete existing sub-events for this parent and re-insert.
+        if (editingEvent) {
+          await supabase.from("events").delete().eq("parent_id", mainEventId);
+        }
+
+        if (has_subevents && sub_events.length > 0) {
+          const subEventsData = sub_events.map(sub => ({
+            title: sub.title,
+            date: sub.date,
+            location: sub.location || formData.location,
+            speaker: sub.speaker || "",
+            description: sub.description || "",
+            parent_id: mainEventId,
+            status: status,
+            category: formData.category,
+            is_subevent: true
+          }));
+          const { error: subErr } = await supabase.from("events").insert(subEventsData);
+          if (subErr) {
+            showToast("warning", "Main event saved, but failed to save sub-events");
+          }
+        }
+      }
+
+      showToast("success", editingEvent ? "Event updated successfully" : "Event created successfully");
+      setTimeout(() => {
+        setShowModal(false);
+        resetForm();
+        fetchEvents();
+      }, 500);
+      
     } catch (err) {
       showToast("error", "An unexpected error occurred");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const addSubEvent = () => {
+    setFormData({
+      ...formData,
+      sub_events: [...formData.sub_events, { 
+        title: "", 
+        date: formData.date || "",
+        location: formData.location || "",
+        speaker: "",
+        description: ""
+      }]
+    });
+  };
+
+  const updateSubEvent = (index, field, value) => {
+    const updated = [...formData.sub_events];
+    updated[index][field] = value;
+    setFormData({ ...formData, sub_events: updated });
+  };
+
+  const removeSubEvent = (index) => {
+    const updated = formData.sub_events.filter((_, i) => i !== index);
+    setFormData({ ...formData, sub_events: updated });
   };
 
   const handleDelete = async (id) => {
@@ -321,8 +396,16 @@ export default function EventManager({ status, title }) {
                 key={event.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`group bg-white border border-slate-200 overflow-hidden hover:border-[#238155]/40 hover:shadow-xl transition-all duration-500 ${viewMode === 'list' ? 'flex flex-row items-center gap-8 p-6' : 'flex flex-col'}`}
+                className={`group relative bg-white border border-slate-200 overflow-visible hover:border-[#238155]/40 hover:shadow-xl transition-all duration-500 ${viewMode === 'list' ? 'flex flex-row items-center gap-8 p-6' : 'flex flex-col'}`}
               >
+                {/* Stacked Card Effect */}
+                {event.sub_events?.length > 0 && (
+                  <>
+                    <div className="absolute -right-1 -bottom-1 w-full h-full border border-slate-200 bg-white -z-10 translate-x-1 translate-y-1" />
+                    <div className="absolute -right-2 -bottom-2 w-full h-full border border-slate-200 bg-white -z-20 translate-x-2 translate-y-2" />
+                  </>
+                )}
+
                 {/* Visual Status Indicator */}
                 <div className={`absolute top-0 left-0 w-1 h-full ${event.featured ? 'bg-[#238155]' : 'bg-slate-100 group-hover:bg-slate-200'}`} />
                 
@@ -332,6 +415,12 @@ export default function EventManager({ status, title }) {
                     <div className="absolute top-0 left-0 bg-[#238155] p-2 flex items-center gap-2">
                       <Star size={12} fill="white" className="text-white" />
                       <span className="text-[8px] font-black text-white uppercase tracking-tighter">Featured</span>
+                    </div>
+                  )}
+                  {event.sub_events?.length > 0 && (
+                    <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 border border-white/10">
+                        <List size={10} className="text-[#238155]" />
+                        <span className="text-[8px] font-black text-white uppercase tracking-widest">{event.sub_events.length} SESSIONS</span>
                     </div>
                   )}
                 </div>
@@ -442,12 +531,22 @@ export default function EventManager({ status, title }) {
                       <input name="location" placeholder="e.g. ISIMS, Sfax..." value={formData.location} onChange={handleChange} required className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
                     </div>
 
-                    <div className="p-6 bg-[#238155]/5 border border-[#238155]/10 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <input type="checkbox" id="featured" name="featured" checked={formData.featured} onChange={handleChange} className="w-6 h-6 accent-[#238155] cursor-pointer" />
-                            <label htmlFor="featured" className="text-[10px] font-black uppercase tracking-[0.2em] text-[#238155] cursor-pointer select-none">Prioritize as Featured</label>
+                    <div className="space-y-4">
+                        <div className="p-6 bg-[#238155]/5 border border-[#238155]/10 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <input type="checkbox" id="featured" name="featured" checked={formData.featured} onChange={handleChange} className="w-6 h-6 accent-[#238155] cursor-pointer" />
+                                <label htmlFor="featured" className="text-[10px] font-black uppercase tracking-[0.2em] text-[#238155] cursor-pointer select-none">Prioritize as Featured</label>
+                            </div>
+                            <Star size={16} className={formData.featured ? "text-[#238155]" : "text-slate-300"} />
                         </div>
-                        <Star size={16} className={formData.featured ? "text-[#238155]" : "text-slate-300"} />
+
+                        <div className="p-6 bg-slate-50 border border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <input type="checkbox" id="has_subevents" name="has_subevents" checked={formData.has_subevents} onChange={handleChange} className="w-6 h-6 accent-slate-900 cursor-pointer" />
+                                <label htmlFor="has_subevents" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 cursor-pointer select-none">Enable Sub-events / Sessions</label>
+                            </div>
+                            <List size={16} className={formData.has_subevents ? "text-slate-900" : "text-slate-200"} />
+                        </div>
                     </div>
 
                     <AnimatePresence>
@@ -479,6 +578,86 @@ export default function EventManager({ status, title }) {
                                         <LinkIcon size={10} className="text-[#238155]" /> Official Website Link
                                     </label>
                                     <input name="website_url" value={formData.website_url} onChange={handleChange} placeholder="e.g. https://event-website.com" className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {formData.has_subevents && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-6 pt-6 border-t border-slate-100">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 flex items-center gap-2">
+                                        <List size={10} className="text-slate-900" /> Sub-event Sequence
+                                    </label>
+                                    <button type="button" onClick={addSubEvent} className="text-[9px] font-black text-[#238155] uppercase tracking-widest hover:underline">+ Add Session</button>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    {formData.sub_events.map((sub, idx) => (
+                                        <div key={idx} className="p-6 bg-slate-50 border border-slate-100 space-y-6 relative group">
+                                            <div className="absolute top-4 right-4 flex items-center gap-2">
+                                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">SESSION #{idx + 1}</span>
+                                                <button type="button" onClick={() => removeSubEvent(idx)} className="p-1 text-slate-300 hover:text-red-500 transition-colors">
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                                <div className="md:col-span-2">
+                                                    <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Session Title</label>
+                                                    <input 
+                                                        value={sub.title} 
+                                                        onChange={(e) => updateSubEvent(idx, 'title', e.target.value)}
+                                                        placeholder="e.g. Technical Deep Dive" 
+                                                        className="w-full bg-white border border-slate-200 p-3 text-[11px] outline-none focus:border-[#238155] text-black" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Speaker / Host</label>
+                                                    <input 
+                                                        value={sub.speaker} 
+                                                        onChange={(e) => updateSubEvent(idx, 'speaker', e.target.value)}
+                                                        placeholder="e.g. Dr. Jane Doe" 
+                                                        className="w-full bg-white border border-slate-200 p-3 text-[11px] outline-none focus:border-[#238155] text-black" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Geospatial Target (Location)</label>
+                                                    <input 
+                                                        value={sub.location} 
+                                                        onChange={(e) => updateSubEvent(idx, 'location', e.target.value)}
+                                                        placeholder="e.g. Lab 01" 
+                                                        className="w-full bg-white border border-slate-200 p-3 text-[11px] outline-none focus:border-[#238155] text-black" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Deployment Date</label>
+                                                    <input 
+                                                        type="date"
+                                                        value={sub.date} 
+                                                        onChange={(e) => updateSubEvent(idx, 'date', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 p-3 text-[11px] outline-none focus:border-[#238155] text-black" 
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Session Brief (Description)</label>
+                                                    <textarea 
+                                                        value={sub.description} 
+                                                        onChange={(e) => updateSubEvent(idx, 'description', e.target.value)}
+                                                        rows="3"
+                                                        placeholder="Brief technical summary..." 
+                                                        className="w-full bg-white border border-slate-200 p-3 text-[11px] outline-none focus:border-[#238155] text-black resize-none" 
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {formData.sub_events.length === 0 && (
+                                        <div className="text-center py-8 border border-dashed border-slate-200 text-[10px] text-slate-400 uppercase font-black tracking-widest">
+                                            No sessions defined
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         )}

@@ -55,3 +55,65 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #238155 #ffffff;
 }
+
+/* ── GLOBAL INTERACTIVE CURSOR ── */
+
+/* Buttons, links, roles */
+a,
+button,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[role="checkbox"],
+[role="radio"],
+label[for],
+summary {
+  cursor: pointer;
+}
+
+/* Any element with a Tailwind hover class should feel interactive */
+[class*="hover:"]:not([class*="cursor-default"]):not([class*="cursor-auto"]):not([class*="cursor-text"]):not(p):not(span):not(h1):not(h2):not(h3):not(h4):not(div[class*="hover:bg"]):not(div[class*="hover:text"]) {
+  cursor: pointer;
+}
+
+/* Divs/sections that have explicit onClick (framer-motion motion.div cards etc.) */
+div[onClick],
+section[onClick] {
+  cursor: pointer;
+}
+
+/* Stat cards, feature cards, team cards — anything that has a group hover */
+.group {
+  cursor: pointer;
+}
+
+/* Inputs and selects */
+input[type="checkbox"],
+input[type="radio"],
+select,
+input[type="file"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  cursor: pointer;
+}
+
+/* Disabled states — never pointer */
+[disabled],
+[aria-disabled="true"],
+button:disabled {
+  cursor: not-allowed !important;
+}
+
+/* Text inputs stay text cursor */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  cursor: text;
+}

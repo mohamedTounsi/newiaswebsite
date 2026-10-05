@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import PageBanner from "../../components/PageBanner";
 import { supabase } from "@/lib/supabase";
 
 // Helper: Get Icon based on category
@@ -98,43 +97,79 @@ function HeroFeaturedEvent({ event, onOpenModal }) {
 }
 
 function MassiveEventCard({ event, index, onClick, isEven }) {
+  const hasSubEvents = event.sub_events?.length > 0;
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className={`group cursor-pointer w-full mb-1 flex flex-col ${isEven ? 'lg:flex-row-reverse' : 'lg:flex-row'} relative overflow-hidden bg-white/95 backdrop-blur-sm shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500`}
+      className={`group cursor-pointer w-full mb-12 flex flex-col ${isEven ? 'lg:flex-row-reverse' : 'lg:flex-row'} relative bg-white border border-slate-100 hover:border-[#238155]/30 transition-all duration-700 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]`}
       onClick={() => onClick(event)}
     >
-      <div className="absolute top-0 left-0 w-24 h-24 border-t-2 border-l-2 border-[#238155] z-20" />
-      <div className="lg:w-1/2 aspect-video overflow-hidden relative">
-        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-        <div className="absolute top-4 left-4">
-          <span className="bg-[#238155] backdrop-blur-sm text-white text-[10px] font-bold tracking-widest px-3 py-1.5 flex items-center gap-1 uppercase italic">
+      {/* Industrial Accents */}
+      <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-slate-100 group-hover:border-[#238155]/40 transition-colors" />
+      <div className="absolute bottom-0 left-0 w-16 h-16 border-b border-l border-slate-100 group-hover:border-[#238155]/40 transition-colors" />
+      
+      <div className="lg:w-3/5 aspect-video overflow-hidden relative">
+        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" />
+        <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500" />
+        
+        {/* Floating Category Label */}
+        <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
+          <div className="bg-[#238155] text-white px-4 py-2 text-[10px] font-black tracking-[0.3em] uppercase italic flex items-center gap-2 border border-white/10 backdrop-blur-md">
             {getEventIcon(event.category)} {event.category}
-          </span>
+          </div>
+          {hasSubEvents && (
+            <div className="bg-black text-white px-3 py-1.5 text-[8px] font-black tracking-[0.2em] uppercase flex items-center gap-2 border border-white/5">
+                <Zap size={10} className="text-[#238155]" /> {event.sub_events.length} ACTIVE SESSIONS
+            </div>
+          )}
+        </div>
+
+        {/* Date Overlay */}
+        <div className="absolute bottom-0 right-0 bg-white px-6 py-4 border-l border-t border-slate-100">
+            <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase block mb-1">SCHEDULED DATE</span>
+            <span className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">{formatDate(event.date)}</span>
         </div>
       </div>
-      <div className={`lg:w-1/2 p-10 flex flex-col justify-center`}>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-[10px] font-black text-[#238155] tracking-widest">#{String(index + 1).padStart(2, '0')}</span>
-          <div className="h-px w-10 bg-gray-100" />
-          <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">{formatDate(event.date)}</span>
+
+      <div className={`lg:w-2/5 p-12 flex flex-col justify-between relative`}>
+        {/* Decorative Grid Lines */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+        
+        <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-8">
+                <span className="text-[10px] font-black text-[#238155] tracking-widest bg-[#238155]/5 px-2 py-1">OP-ID: NEXT-0{index + 1}</span>
+                <div className="h-px flex-1 bg-slate-100" />
+            </div>
+
+            <h3 className="text-4xl font-black text-slate-900 leading-none uppercase tracking-tighter mb-6 group-hover:text-[#238155] transition-colors italic">
+              {event.title}
+            </h3>
+            
+            <p className="text-slate-500 text-sm leading-relaxed mb-10 font-light line-clamp-3">
+              {event.description}
+            </p>
+
+            <div className="grid grid-cols-2 gap-6 mb-10">
+                <div className="border-l-2 border-slate-100 pl-4 py-1">
+                    <p className="text-[8px] font-black text-slate-300 tracking-widest uppercase mb-1">Venue</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.location}</p>
+                </div>
+                <div className="border-l-2 border-slate-100 pl-4 py-1">
+                    <p className="text-[8px] font-black text-slate-300 tracking-widest uppercase mb-1">Capacity</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.attendees || "TBA"}</p>
+                </div>
+            </div>
         </div>
-        <h3 className="text-3xl lg:text-4xl font-black text-gray-900 leading-none uppercase tracking-tighter mb-6 group-hover:text-[#238155] transition-colors italic">
-          {event.title}
-        </h3>
-        <p className="text-gray-500 text-sm lg:text-base leading-relaxed mb-10 line-clamp-3">
-          {event.description}
-        </p>
-        <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-          <span className="flex items-center gap-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-            <MapPin size={14} className="text-[#238155]" /> {event.location}
-          </span>
-          <div className="flex items-center gap-2 text-[10px] font-black text-[#238155] tracking-[0.2em] uppercase">
-            LEARN MORE <ArrowUpRight size={16} />
+
+        <div className="relative z-10 flex items-center justify-between pt-8 border-t border-slate-100">
+          <div className="flex items-center gap-2 group/link text-[10px] font-black text-[#238155] tracking-[0.3em] uppercase cursor-pointer">
+            LEARN MORE <ArrowUpRight size={16} className="group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 text-[8px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
+            STATUS: ACTIVE
           </div>
         </div>
       </div>
@@ -143,28 +178,46 @@ function MassiveEventCard({ event, index, onClick, isEven }) {
 }
 
 function CompactEventCard({ event, onClick }) {
+  const hasSubEvents = event.sub_events?.length > 0;
   return (
     <motion.div
-      whileHover={{ y: -6 }}
-      className="group cursor-pointer bg-white shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden border border-gray-100"
+      whileHover={{ y: -8 }}
+      className="group cursor-pointer bg-white border border-slate-100 overflow-hidden relative shadow-sm hover:shadow-2xl transition-all duration-500"
       onClick={() => onClick(event)}
     >
-      <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#238155] z-20" />
-      <div className="relative w-full aspect-video overflow-hidden">
-        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-        <div className="absolute top-2 left-2">
-          <span className="bg-black/70 backdrop-blur-sm text-white text-[8px] font-bold tracking-widest px-2 py-1 uppercase flex items-center gap-1">
+      {/* Corner Accent */}
+      <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-slate-200 group-hover:border-[#238155] transition-colors z-20" />
+      
+      <div className="relative w-full aspect-[4/3] overflow-hidden">
+        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+        
+        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+          <span className="bg-black/60 backdrop-blur-md text-white text-[7px] font-black tracking-widest px-2 py-1 uppercase flex items-center gap-1 w-fit border border-white/10">
             {getEventIcon(event.category)} {event.category}
           </span>
         </div>
+
+        <div className="absolute bottom-4 left-4 right-4 z-10">
+             {hasSubEvents && (
+                <div className="text-[6px] font-black text-[#238155] tracking-[0.3em] uppercase mb-2 flex items-center gap-1.5">
+                    <div className="w-1 h-1 bg-[#238155] rounded-full animate-pulse" />
+                    {event.sub_events.length} ACTIVE SESSIONS
+                </div>
+            )}
+            <h4 className="text-sm font-black text-white leading-tight uppercase tracking-tight group-hover:text-[#238155] transition-colors italic">
+                {event.title}
+            </h4>
+        </div>
       </div>
-      <div className="p-4">
-        <h4 className="text-sm font-black text-gray-900 leading-tight mb-2 uppercase tracking-tight group-hover:text-[#238155] transition-colors">
-          {event.title}
-        </h4>
-        <div className="flex items-center justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-          <span>{formatDate(event.date)}</span>
-          <ArrowUpRight size={12} className="text-[#238155]" />
+
+      <div className="p-5 flex items-center justify-between bg-white border-t border-slate-50">
+        <div className="flex flex-col">
+            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-0.5">Deployment</span>
+            <span className="text-[9px] font-bold text-slate-900 uppercase tracking-tight">{formatDate(event.date)}</span>
+        </div>
+        <div className="w-8 h-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-[#238155] group-hover:border-[#238155] transition-all duration-500">
+            <ArrowUpRight size={14} className="text-slate-300 group-hover:text-white transition-colors" />
         </div>
       </div>
     </motion.div>
@@ -223,6 +276,38 @@ function EventModal({ event, onClose }) {
                 <p className="text-sm font-bold">{formatDate(event.date)}</p>
               </div>
             </div>
+
+            {event.sub_events && event.sub_events.length > 0 && (
+                <div className="p-8 bg-slate-50 border border-slate-100 mt-10">
+                    <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-[0.3em] mb-8 flex items-center gap-2 italic border-b border-gray-200 pb-4">
+                        <Zap size={14} className="text-[#238155]" /> Mission Roadmap
+                    </h3>
+                    <div className="space-y-8">
+                        {event.sub_events.map((sub, i) => (
+                            <div key={i} className="relative pl-8 border-l-2 border-[#238155]/20 hover:border-[#238155] transition-colors">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#238155] flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#238155]" />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                        <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight"># Session {i + 1}: {sub.title}</h4>
+                                        <span className="text-[10px] font-bold text-[#238155] uppercase tracking-widest bg-white px-2 py-1 border border-gray-100">{formatDate(sub.date)}</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                        {sub.speaker && <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {sub.speaker}</span>}
+                                        {sub.location && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#238155]" /> {sub.location}</span>}
+                                    </div>
+                                    {sub.description && (
+                                        <p className="text-xs text-gray-500 font-light leading-relaxed mt-2 italic">
+                                            {sub.description}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
           </div>
           
           <button className="w-full bg-[#238155] text-white py-6 text-[10px] font-black tracking-[0.5em] uppercase hover:bg-black transition-all mt-10">
@@ -261,7 +346,18 @@ export default function UpcomingEvents() {
         .select("*")
         .eq("status", "upcoming")
         .order("date", { ascending: true });
-      if (data) setEvents(data);
+      
+      if (data) {
+        // Group sub-events
+        const mainEvents = data.filter(e => !e.parent_id);
+        const subEvents = data.filter(e => e.parent_id);
+        
+        const combined = mainEvents.map(main => ({
+          ...main,
+          sub_events: subEvents.filter(sub => sub.parent_id === main.id)
+        }));
+        setEvents(combined);
+      }
       setLoading(false);
     }
     fetchEvents();
@@ -273,16 +369,18 @@ export default function UpcomingEvents() {
   const compactEvents = regularEvents.slice(4);
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
-      {/* Background Texture */}
+      <div className="relative overflow-hidden">
+        {/* Background Texture - Square Grid */}
       <div className="absolute inset-0 pointer-events-none z-0" style={{ background: "linear-gradient(135deg, #f4f6f9, #e9eef5)" }} />
       <div className="absolute inset-0 pointer-events-none z-0 opacity-40" style={{
           backgroundImage: `
-            repeating-linear-gradient(-45deg, rgba(35, 129, 85, 0.035) 0px, rgba(35, 129, 85, 0.035) 1px, transparent 1px, transparent 18px),
-            repeating-linear-gradient(45deg, rgba(35, 129, 85, 0.025) 0px, rgba(35, 129, 85, 0.025) 1px, transparent 1px, transparent 28px)
+            linear-gradient(rgba(35, 129, 85, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(35, 129, 85, 0.05) 1px, transparent 1px)
           `,
+          backgroundSize: '40px 40px'
       }} />
 
       {/* Particles */}
@@ -297,8 +395,6 @@ export default function UpcomingEvents() {
       </div>
 
       <div className="relative z-10">
-        <PageBanner title="SCHEDULE" description="Be part of our next industrial technical sessions and workshops." Icon={Calendar} />
-
         {featuredEvent && <HeroFeaturedEvent event={featuredEvent} onOpenModal={setSelectedEvent} />}
 
         <main className="max-w-7xl mx-auto px-6 py-20">
@@ -333,11 +429,42 @@ export default function UpcomingEvents() {
               )}
             </>
           ) : (
-            <div className="text-center py-40 opacity-20">
-               <h2 className="text-4xl font-black uppercase tracking-tighter italic">The Schedule is being refined...</h2>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center relative z-10">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="space-y-8 max-w-3xl mx-auto px-4"
+              >
+                <div className="w-24 h-24 bg-gradient-to-br from-[#238155]/20 to-[#238155]/5 rounded-2xl flex items-center justify-center mx-auto mb-10 shadow-sm border border-[#238155]/20 rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <Calendar size={40} strokeWidth={1.5} className="text-[#238155]" />
+                </div>
+                
+                <div className="space-y-4">
+                  <h2 className="text-5xl md:text-7xl font-black text-gray-900 uppercase tracking-tighter">
+                    Incoming <span className="text-[#238155] italic">Intel</span>
+                  </h2>
+                  <div className="h-px w-24 bg-[#238155]/30 mx-auto" />
+                </div>
+
+                <p className="text-gray-500 text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto">
+                  Our strategic team is currently calibrating the next series of high-impact workshops and technical sessions. 
+                  <br className="hidden md:block" /> Stay on high alert.
+                </p>
+
+                <div className="pt-10">
+                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-[#238155]/5 border border-[#238155]/20 rounded-none group cursor-default">
+                    <div className="w-2 h-2 rounded-full bg-[#238155] animate-pulse" />
+                    <span className="text-[11px] font-black tracking-[0.4em] uppercase text-[#238155]">
+                      System Updating...
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           )}
         </main>
+      </div>
       </div>
 
       <AnimatePresence>
