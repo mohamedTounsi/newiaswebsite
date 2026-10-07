@@ -7,9 +7,10 @@ import { usePathname, useRouter } from "next/navigation";
 /* ===== HEADER ITEMS ===== */
 const headerItems = [
   { name: "Home", href: "/" },
-  { name: "About Us", href: "/about" },
+  { name: "About", href: "/about" },
   { name: "Team", href: "/team" },
   { name: "Events", href: "/events" },
+  { name: "Awards", href: "/awards" },
   { name: "Contact Us", href: "/contact" },
 ];
 

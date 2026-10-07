@@ -6,7 +6,7 @@ import Link from "next/link";
 import { 
   Calendar, CalendarDays, LogOut, Users, 
   Settings, Activity, ShieldCheck, ArrowRight,
-  Database, Zap, Clock, Terminal, Globe
+  Database, Zap, Clock, Terminal, Globe, Trophy
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -68,6 +68,14 @@ export default function Dashboard() {
       href: "/admin/team",
       stats: "Personnel",
       color: "from-teal-500/20 to-transparent"
+    },
+    {
+      title: "HONORS & AWARDS",
+      desc: "Manage chapter awards, recognitions and global achievements.",
+      icon: Trophy,
+      href: "/admin/awards",
+      stats: "Achievements",
+      color: "from-yellow-500/20 to-transparent"
     }
   ];
 

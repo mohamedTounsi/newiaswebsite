@@ -18,7 +18,7 @@ import {
   ShieldCheck,
   Activity,
   GripHorizontal
-} from "lucide-react";
+, ArrowUp, ArrowDown, ChevronsUp, ListOrdered} from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
   RiInstagramLine,
@@ -217,16 +217,10 @@ export default function TeamAdmin() {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return;
-    const items = Array.from(members);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    // Optimistic UI update
-    setMembers(items);
+  const [draggedMemberIndex, setDraggedMemberIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
-    // Sync to database
+  const updateDisplayOrder = async (items) => {
     const updates = items.map((m, index) => ({
       id: m.id,
       display_order: index + 1
@@ -236,6 +230,47 @@ export default function TeamAdmin() {
       supabase.from("team_members").update({ display_order: u.display_order }).eq("id", u.id)
     ));
     showToast("success", "Roster order updated");
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedMemberIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e, index) => {
+    e.preventDefault();
+    if (draggedMemberIndex === null || draggedMemberIndex === index) {
+      setDragOverIndex(null);
+      return;
+    }
+    const items = Array.from(members);
+    const [reorderedItem] = items.splice(draggedMemberIndex, 1);
+    items.splice(index, 0, reorderedItem);
+    
+    setMembers(items);
+    setDraggedMemberIndex(null);
+    setDragOverIndex(null);
+    
+    updateDisplayOrder(items);
+  };
+
+  const handleDragEndAction = () => {
+    setDraggedMemberIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const changePosition = (index, newIndex) => {
+    if (newIndex < 0 || newIndex >= members.length) return;
+    const items = Array.from(members);
+    const [reorderedItem] = items.splice(index, 1);
+    items.splice(newIndex, 0, reorderedItem);
+    setMembers(items);
+    updateDisplayOrder(items);
   };
 
   return (
@@ -316,76 +351,77 @@ export default function TeamAdmin() {
                 <button onClick={() => setShowMemberModal(true)} className="mt-6 text-[#238155] text-[10px] font-black uppercase tracking-widest hover:underline">Add First Member</button>
             </div>
         ) : !mounted ? null : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="team-members" direction="horizontal">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-                  >
-                      {members.map((member, index) => (
-                        <Draggable key={member.id} draggableId={String(member.id)} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className={`group relative bg-white border border-slate-200 overflow-hidden hover:border-[#238155]/40 transition-all duration-700 ${snapshot.isDragging ? 'shadow-2xl scale-105 z-50 border-[#238155]' : ''}`}
-                            >
-                                <div 
-                                  className="absolute top-0 left-0 z-50 p-3 bg-white/90 backdrop-blur-sm border-b border-r border-slate-200 cursor-grab active:cursor-grabbing hover:bg-slate-50 transition-colors"
-                                  {...provided.dragHandleProps}
-                                >
-                                  <GripHorizontal size={16} className="text-slate-600 hover:text-[#238155]" />
-                                </div>
-                                <div className="aspect-[4/5] relative overflow-hidden bg-slate-50">
-                                    <img
-                                        src={member.image_url || "/placeholder-team.jpg"}
-                                        alt={`${member.first_name}`}
-                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
-                                        <div className="flex gap-3 justify-center mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                            <button onClick={() => openEditMember(member)} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-[#238155] hover:text-white transition-colors">
-                                                <Edit size={18} />
-                                            </button>
-                                            <button onClick={() => setDeleteConfirm(member)} className="w-12 h-12 bg-white text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-6 relative">
-                                    <div className="absolute top-0 right-6 -translate-y-1/2 w-10 h-10 bg-[#238155] flex items-center justify-center shadow-lg">
-                                        <Users size={16} className="text-white" />
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none mb-2">
-                                        {member.first_name} <span className="text-[#238155]">{member.last_name}</span>
-                                    </h3>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{member.position}</p>
-                                    
-                                    <div className="flex gap-4 mt-6 pt-6 border-t border-slate-50">
-                                        {[
-                                            { icon: RiInstagramLine, url: member.instagram_url },
-                                            { icon: RiFacebookLine, url: member.facebook_url },
-                                            { icon: RiLinkedinLine, url: member.linkedin_url },
-                                            { icon: RiMailLine, url: member.email_url }
-                                        ].map((soc, i) => (
-                                            <div key={i} className={`p-2 ${soc.url ? 'text-[#238155]' : 'text-slate-200'}`}>
-                                                <soc.icon size={14} />
-                                            </div>
-                                        ))}
-                                    </div>
+            
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {members.map((member, index) => (
+                    <div
+                        key={member.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDrop={(e) => handleDrop(e, index)}
+                        onDragEnd={handleDragEndAction}
+                        className={`group relative bg-white border border-slate-200 overflow-hidden hover:border-[#238155]/40 transition-all duration-300 
+                            ${draggedMemberIndex === index ? 'opacity-40 scale-95 shadow-inner' : ''}
+                            ${dragOverIndex === index ? 'border-2 border-dashed border-[#238155] scale-105 shadow-xl z-50' : ''}
+                        `}
+                    >
+                        <div className="absolute top-0 left-0 z-50 p-3 bg-white/90 backdrop-blur-sm border-b border-r border-slate-200 cursor-grab active:cursor-grabbing hover:bg-slate-50 transition-colors">
+                            <GripHorizontal size={16} className="text-slate-600 hover:text-[#238155]" />
+                        </div>
+                        
+                        {/* Order Badge & Quick Actions */}
+                        <div className="absolute top-0 right-0 z-50 p-2 flex gap-1">
+                            <div className="bg-black text-white text-[10px] font-black px-3 py-1 flex items-center justify-center border-b border-l border-slate-800 shadow-sm">
+                                #{index + 1}
+                            </div>
+                        </div>
+
+                        <div className="absolute top-12 left-0 z-50 flex flex-col gap-1 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {index > 0 && (
+                                <button onClick={(e) => { e.stopPropagation(); changePosition(index, 0); }} className="p-1.5 bg-white border border-slate-200 text-slate-600 hover:text-[#238155] hover:bg-slate-50 shadow-sm tooltip" title="Move to First">
+                                    <ChevronsUp size={14} />
+                                </button>
+                            )}
+                            {index > 0 && (
+                                <button onClick={(e) => { e.stopPropagation(); changePosition(index, index - 1); }} className="p-1.5 bg-white border border-slate-200 text-slate-600 hover:text-[#238155] hover:bg-slate-50 shadow-sm tooltip" title="Move Up">
+                                    <ArrowUp size={14} />
+                                </button>
+                            )}
+                            {index < members.length - 1 && (
+                                <button onClick={(e) => { e.stopPropagation(); changePosition(index, index + 1); }} className="p-1.5 bg-white border border-slate-200 text-slate-600 hover:text-[#238155] hover:bg-slate-50 shadow-sm tooltip" title="Move Down">
+                                    <ArrowDown size={14} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="aspect-[4/5] relative overflow-hidden bg-slate-50 pointer-events-none">
+                            <img
+                                src={member.image_url || "/placeholder-team.jpg"}
+                                alt={`${member.first_name}`}
+                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 pointer-events-auto">
+                                <div className="flex gap-3 justify-center mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                    <button onClick={() => openEditMember(member)} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-[#238155] hover:text-white transition-colors shadow-lg">
+                                        <Edit size={18} />
+                                    </button>
+                                    <button onClick={() => setDeleteConfirm(member)} className="w-12 h-12 bg-white text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors shadow-lg">
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
                             </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                        </div>
+                        <div className="p-6 relative">
+                            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none mb-2">
+                                {member.first_name} <span className="text-[#238155]">{member.last_name}</span>
+                            </h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{member.position}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
         )}
       </main>
 
@@ -557,3 +593,5 @@ export default function TeamAdmin() {
     </div>
   );
 }
+
+
