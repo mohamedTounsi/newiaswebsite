@@ -62,7 +62,7 @@ function AwardCard({ award, index }) {
               className="text-[10px] uppercase tracking-[0.3em]"
               style={{ color: "#6aaa8a", fontWeight: 600 }}
             >
-              {award.date_received || "Unknown Date"}
+              {award.date_received || "Honors & Recognition"}
             </p>
           </div>
           <h3
@@ -102,7 +102,7 @@ export default function Awards() {
       const { data } = await supabase
         .from("awards")
         .select("*")
-        .order("date_received", { ascending: false });
+        .order("created_at", { ascending: false });
 
       setAwards(data || []);
       setLoading(false);

@@ -34,7 +34,6 @@ export default function AwardsAdmin() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date_received: "",
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -50,7 +49,7 @@ export default function AwardsAdmin() {
     const { data, error } = await supabase
       .from("awards")
       .select("*")
-      .order("date_received", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (!error) setAwards(data || []);
     setLoading(false);
@@ -79,7 +78,6 @@ export default function AwardsAdmin() {
     setFormData({
       title: "",
       description: "",
-      date_received: "",
     });
     setImageFile(null);
     setImagePreview(null);
@@ -91,7 +89,6 @@ export default function AwardsAdmin() {
     setFormData({
       title: award.title || "",
       description: award.description || "",
-      date_received: award.date_received || "",
     });
     setImagePreview(award.image_url);
     setShowModal(true);
@@ -108,7 +105,6 @@ export default function AwardsAdmin() {
       const awardData = {
         title: formData.title,
         description: formData.description,
-        date_received: formData.date_received,
         image_url: imageUrl,
       };
 
@@ -201,7 +197,6 @@ export default function AwardsAdmin() {
                             </div>
                         </div>
                         <div className="p-6 relative">
-                            <p className="text-[10px] font-black text-[#238155] uppercase tracking-widest mb-1">{award.date_received}</p>
                             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-2">
                                 {award.title}
                             </h3>
@@ -241,11 +236,6 @@ export default function AwardsAdmin() {
                         <div>
                             <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3">Award Title *</label>
                             <input name="title" value={formData.title} onChange={handleChange} required className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
-                        </div>
-
-                        <div>
-                            <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3">Date Received *</label>
-                            <input type="date" name="date_received" value={formData.date_received} onChange={handleChange} required className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
                         </div>
 
                         <div>
