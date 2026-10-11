@@ -3,9 +3,114 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { Trophy } from "lucide-react";
+import { Trophy, X, Calendar, Sparkles, ArrowUpRight } from "lucide-react";
 
-function AwardCard({ award, index }) {
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return isNaN(d)
+    ? dateStr
+    : d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+};
+
+function AwardModal({ award, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-4xl bg-white shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] border border-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/60 hover:bg-[#238155] text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-sm hover:scale-105"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="md:w-1/2 aspect-video md:aspect-auto relative bg-neutral-900 min-h-[260px]">
+          <img
+            src={award.image_url || "/placeholder-award.jpg"}
+            alt={award.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute bottom-6 left-6 right-6 z-10">
+            <span className="bg-[#238155] text-white text-[9px] px-3 py-1 font-black tracking-widest uppercase mb-2 inline-flex items-center gap-1.5 italic">
+              <Trophy size={11} /> HONORS & RECOGNITION
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight uppercase tracking-tighter italic">
+              {award.title}
+            </h2>
+          </div>
+        </div>
+
+        <div className="md:w-1/2 p-8 md:p-12 overflow-y-auto bg-white flex flex-col justify-between">
+          <div className="space-y-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2 text-[#238155] text-[10px] font-black tracking-[0.3em] uppercase">
+                <Sparkles size={14} /> Official Chapter Honor
+              </div>
+              {(award.date_received || award.created_at) && (
+                <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                  <Calendar size={13} className="text-[#238155]" />
+                  <span>
+                    {award.date_received || formatDate(award.created_at)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase block">
+                Description
+              </span>
+              <p className="text-base sm:text-lg text-gray-600 font-light leading-relaxed whitespace-pre-line">
+                {award.description || "No description provided."}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-between text-[10px] font-black text-gray-400 tracking-widest uppercase">
+            <span>IEEE IAS ISIMS</span>
+            <span className="text-[#238155] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#238155]" />
+              Chapter Recognition
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function AwardCard({ award, index, onClick }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 28 }}
@@ -16,10 +121,11 @@ function AwardCard({ award, index }) {
         delay: index * 0.06,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="group relative w-full h-full"
+      className="group relative w-full h-full cursor-pointer"
+      onClick={() => onClick(award)}
     >
       <div
-        className="relative overflow-hidden transition-all duration-400 h-full flex flex-col"
+        className="relative overflow-hidden transition-all duration-400 h-full flex flex-col group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
         style={{
           background: "white",
           border: "1px solid rgba(35,129,85,0.12)",
@@ -44,12 +150,16 @@ function AwardCard({ award, index }) {
             className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-end p-4"
             style={{
               background:
-                "linear-gradient(to top, rgba(10,30,18,0.65) 0%, transparent 55%)",
+                "linear-gradient(to top, rgba(10,30,18,0.7) 0%, transparent 55%)",
             }}
-          />
+          >
+            <span className="text-[10px] font-black tracking-widest uppercase text-white bg-[#238155] px-3 py-1 flex items-center gap-1.5 shadow-md">
+              View Award <ArrowUpRight size={12} />
+            </span>
+          </div>
         </div>
 
         <div
@@ -66,20 +176,19 @@ function AwardCard({ award, index }) {
             </p>
           </div>
           <h3
-            className="text-[17px] leading-snug mb-3 uppercase tracking-tighter"
+            className="text-[17px] leading-snug mb-3 uppercase tracking-tighter group-hover:text-[#238155] transition-colors"
             style={{ color: "#0f3d25", fontWeight: 800 }}
           >
             {award.title}
           </h3>
-          <p className="text-sm text-gray-500 line-clamp-3 mb-2 font-light">
+          <p className="text-sm text-gray-500 line-clamp-3 mb-2 font-light leading-relaxed">
             {award.description}
           </p>
 
           <div className="mt-auto pt-4 flex items-center justify-between">
-            <div
-              className="w-8 h-px flex-shrink-0"
-              style={{ background: "#238155" }}
-            />
+            <span className="text-[10px] font-bold text-[#238155] tracking-widest uppercase group-hover:underline flex items-center gap-1">
+              Read Details &rarr;
+            </span>
             <div
               className="w-1.5 h-1.5 rounded-full"
               style={{ background: "#238155" }}
@@ -95,6 +204,7 @@ export default function Awards() {
   const [awards, setAwards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cols, setCols] = useState(3);
+  const [selectedAward, setSelectedAward] = useState(null);
 
   // Fetch awards
   useEffect(() => {
@@ -265,7 +375,11 @@ export default function Awards() {
                           minWidth: shouldCenter ? "280px" : undefined,
                         }}
                       >
-                        <AwardCard award={award} index={rowIndex * cols + i} />
+                        <AwardCard
+                          award={award}
+                          index={rowIndex * cols + i}
+                          onClick={setSelectedAward}
+                        />
                       </div>
                     ))}
                   </div>
@@ -273,6 +387,16 @@ export default function Awards() {
               })
             )}
           </motion.div>
+        </AnimatePresence>
+
+        {/* Award Details Modal */}
+        <AnimatePresence>
+          {selectedAward && (
+            <AwardModal
+              award={selectedAward}
+              onClose={() => setSelectedAward(null)}
+            />
+          )}
         </AnimatePresence>
 
         {/* Bottom rule */}
