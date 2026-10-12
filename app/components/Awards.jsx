@@ -3,19 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { Trophy, X, Calendar, Sparkles, ArrowUpRight } from "lucide-react";
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return isNaN(d)
-    ? dateStr
-    : d.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-};
+import { Trophy, X, Sparkles, ArrowUpRight } from "lucide-react";
 
 function AwardModal({ award, onClose }) {
   useEffect(() => {
@@ -77,14 +65,6 @@ function AwardModal({ award, onClose }) {
               <div className="flex items-center gap-2 text-[#238155] text-[10px] font-black tracking-[0.3em] uppercase">
                 <Sparkles size={14} /> Official Chapter Honor
               </div>
-              {(award.date_received || award.created_at) && (
-                <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <Calendar size={13} className="text-[#238155]" />
-                  <span>
-                    {award.date_received || formatDate(award.created_at)}
-                  </span>
-                </div>
-              )}
             </div>
 
             <div className="space-y-4">
@@ -172,7 +152,7 @@ function AwardCard({ award, index, onClick }) {
               className="text-[10px] uppercase tracking-[0.3em]"
               style={{ color: "#6aaa8a", fontWeight: 600 }}
             >
-              {award.date_received || "Honors & Recognition"}
+              Honors & Recognition
             </p>
           </div>
           <h3
