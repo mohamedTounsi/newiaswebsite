@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, MapPin, Users, Mic, Code,
   Globe, Trophy, Coffee, ArrowUpRight, ExternalLink,
-  Play, Heart, X, Sparkles, Eye, Share2, Zap
+  Play, Heart, X, Sparkles, Eye, Share2, Zap, Lightbulb
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -19,6 +19,7 @@ const getEventIcon = (type) => {
     case "bootcamp": return <Code className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "competition": return <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "hackathon": return <Coffee className="w-3 h-3 sm:w-4 sm:h-4" />;
+    case "ideathon": return <Lightbulb className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "anniversary": return <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "celebration": return <Heart className="w-3 h-3 sm:w-4 sm:h-4" />;
     default: return <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />;
@@ -26,6 +27,7 @@ const getEventIcon = (type) => {
 };
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return "SOON";
   const d = new Date(dateStr);
   return isNaN(d) ? dateStr : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 };
@@ -45,12 +47,6 @@ function HeroFeaturedEvent({ event, onOpenModal }) {
       <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10s] group-hover:scale-110" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
       
-      <div className="absolute top-8 left-8 z-10 flex gap-4">
-        <div className="bg-[#238155] backdrop-blur-sm px-4 py-2">
-          <div className="text-white/50 text-[10px] tracking-wider font-bold uppercase">Expected</div>
-          <div className="text-white text-xl font-black italic uppercase">{event.attendees || "TBA"}</div>
-        </div>
-      </div>
 
       <div className="absolute top-8 right-8 z-10 flex items-center gap-6">
         {event.website_url && (
@@ -152,14 +148,10 @@ function MassiveEventCard({ event, index, onClick, isEven }) {
               {event.description}
             </p>
 
-            <div className="grid grid-cols-2 gap-6 mb-10">
+            <div className="mb-10">
                 <div className="border-l-2 border-slate-100 pl-4 py-1">
                     <p className="text-[8px] font-black text-slate-300 tracking-widest uppercase mb-1">Venue</p>
-                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.location}</p>
-                </div>
-                <div className="border-l-2 border-slate-100 pl-4 py-1">
-                    <p className="text-[8px] font-black text-slate-300 tracking-widest uppercase mb-1">Capacity</p>
-                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.attendees || "TBA"}</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.location || "TBA"}</p>
                 </div>
             </div>
         </div>
@@ -269,7 +261,7 @@ function EventModal({ event, onClose }) {
             <div className="grid grid-cols-2 gap-8 border-y border-gray-100 py-10">
               <div className="space-y-2">
                 <p className="text-[10px] text-gray-400 font-black tracking-widest uppercase">VENUE</p>
-                <p className="text-sm font-bold uppercase">{event.location}</p>
+                <p className="text-sm font-bold uppercase">{event.location || "SOON"}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-[10px] text-gray-400 font-black tracking-widest uppercase">SCHEDULED</p>
@@ -298,9 +290,9 @@ function EventModal({ event, onClose }) {
                                         {sub.location && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#238155]" /> {sub.location}</span>}
                                     </div>
                                     {sub.description && (
-                                        <p className="text-xs text-gray-500 font-light leading-relaxed mt-2 italic">
-                                            {sub.description}
-                                        </p>
+                                         <p className="text-xs text-gray-500 font-light leading-relaxed mt-2 italic">
+                                             {sub.description}
+                                         </p>
                                     )}
                                 </div>
                             </div>
@@ -309,10 +301,6 @@ function EventModal({ event, onClose }) {
                 </div>
             )}
           </div>
-          
-          <button className="w-full bg-[#238155] text-white py-6 text-[10px] font-black tracking-[0.5em] uppercase hover:bg-black transition-all mt-10">
-            REGISTER NOW
-          </button>
         </div>
       </motion.div>
     </motion.div>

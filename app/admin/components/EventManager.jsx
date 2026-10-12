@@ -210,6 +210,10 @@ export default function EventManager({ status, title }) {
       
       const eventData = {
         ...coreData,
+        date: formData.date ? formData.date : null,
+        end_date: formData.end_date ? formData.end_date : null,
+        location: formData.location || null,
+        attendees: formData.attendees || null,
         image: imageUrl,
         featured_icon_url: featuredIconUrl,
         highlights: highlightsArray,
@@ -428,14 +432,20 @@ export default function EventManager({ status, title }) {
                 <div className={`flex-1 min-w-0 ${viewMode === 'grid' ? 'p-6' : ''}`}>
                   <div className="flex items-center gap-3 mb-2">
                     <span className="bg-slate-50 text-slate-400 px-2 py-1 text-[8px] font-black tracking-widest uppercase border border-slate-100">{event.category || "General"}</span>
-                    <span className="text-[10px] font-bold text-slate-300 tracking-widest uppercase">{new Date(event.date).toLocaleDateString()}</span>
+                    <span className="text-[10px] font-bold text-slate-300 tracking-widest uppercase">
+                      {event.date ? new Date(event.date).toLocaleDateString() : "Date TBD"}
+                    </span>
                   </div>
                   <h3 className={`font-black text-slate-900 group-hover:text-[#238155] leading-tight uppercase tracking-tighter italic mb-4 transition-colors ${viewMode === 'list' ? 'text-2xl' : 'text-xl'}`}>
                     {event.title}
                   </h3>
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-6">
-                    <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#238155]" /> {event.location}</span>
-                    <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {event.attendees || "0"} Attendees</span>
+                    {event.location && (
+                      <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#238155]" /> {event.location}</span>
+                    )}
+                    {event.attendees && (
+                      <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {event.attendees} Attendees</span>
+                    )}
                     {event.video_url && <span className="flex items-center gap-1.5 text-[#238155]"><Play size={12} fill="#238155" /> Recap Available</span>}
                   </div>
                   
@@ -513,22 +523,24 @@ export default function EventManager({ status, title }) {
                           <option value="bootcamp">Bootcamp</option>
                           <option value="competition">Competition</option>
                           <option value="hackathon">Hackathon</option>
+                          <option value="ideathon">Ideathon</option>
+                          <option value="celebration">Celebration</option>
                           <option value="anniversary">Anniversary</option>
                         </select>
                       </div>
                       <div>
                         <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
-                           <CalendarIcon size={10} className="text-[#238155]" /> Timestamp
+                           <CalendarIcon size={10} className="text-[#238155]" /> Timestamp {status === "upcoming" ? "(Optional)" : "*"}
                         </label>
-                        <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
+                        <input type="date" name="date" value={formData.date} onChange={handleChange} required={status !== "upcoming"} className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
                       </div>
                     </div>
                     
                     <div>
                       <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
-                         <MapPin size={10} className="text-[#238155]" /> Geospatial Deployment
+                         <MapPin size={10} className="text-[#238155]" /> Geospatial Deployment {status === "upcoming" ? "(Optional)" : "*"}
                       </label>
-                      <input name="location" placeholder="e.g. ISIMS, Sfax..." value={formData.location} onChange={handleChange} required className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
+                      <input name="location" placeholder="e.g. ISIMS, Sfax..." value={formData.location} onChange={handleChange} required={status !== "upcoming"} className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
                     </div>
 
                     <div className="space-y-4">
@@ -706,19 +718,11 @@ export default function EventManager({ status, title }) {
                       <textarea name="description" value={formData.description} onChange={handleChange} rows="5" placeholder="Detailed technical overview..." className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black resize-none" />
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                       <div>
-                        <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
-                           <Users size={10} className="text-[#238155]" /> Attendee Metrics
-                        </label>
-                        <input name="attendees" value={formData.attendees} onChange={handleChange} placeholder="e.g. 250+" className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
-                           <Activity size={10} className="text-[#238155]" /> Strategic Highlights
-                        </label>
-                        <input name="highlights" value={formData.highlights} onChange={handleChange} placeholder="Comma separated, e.g. Networking, Technical, Winners" className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
-                      </div>
+                    <div>
+                      <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
+                         <Activity size={10} className="text-[#238155]" /> Strategic Highlights
+                      </label>
+                      <input name="highlights" value={formData.highlights} onChange={handleChange} placeholder="Comma separated, e.g. Networking, Technical, Winners" className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
                     </div>
                 </div>
 

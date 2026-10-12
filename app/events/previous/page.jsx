@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, MapPin, Users, Mic, Code,
   Globe, Trophy, Coffee, ArrowUpRight, ExternalLink,
-  Play, Heart, X, Sparkles, Eye, Share2, History
+  Play, Heart, X, Sparkles, Eye, Share2, History, Lightbulb
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -19,6 +19,7 @@ const getEventIcon = (type) => {
     case "bootcamp": return <Code className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "competition": return <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "hackathon": return <Coffee className="w-3 h-3 sm:w-4 sm:h-4" />;
+    case "ideathon": return <Lightbulb className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "anniversary": return <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />;
     case "celebration": return <Heart className="w-3 h-3 sm:w-4 sm:h-4" />;
     default: return <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />;

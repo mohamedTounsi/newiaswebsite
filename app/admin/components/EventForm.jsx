@@ -68,10 +68,13 @@ export default function EventForm({ status }) {
     setMessage({ type: "", text: "" });
 
     // Validate required fields
-    if (!form.title || !form.date || !form.location) {
+    const isUpcoming = status === "upcoming";
+    if (!form.title || (!isUpcoming && (!form.date || !form.location))) {
       setMessage({
         type: "error",
-        text: "Please fill in all required fields (Title, Date, Location)",
+        text: isUpcoming
+          ? "Please fill in the required field (Title)"
+          : "Please fill in all required fields (Title, Date, Location)",
       });
       setLoading(false);
       return;
@@ -212,6 +215,8 @@ export default function EventForm({ status }) {
             <option value="bootcamp">Bootcamp</option>
             <option value="competition">Competition</option>
             <option value="hackathon">Hackathon</option>
+            <option value="ideathon">Ideathon</option>
+            <option value="celebration">Celebration</option>
             <option value="anniversary">Anniversary</option>
           </select>
         </div>
@@ -219,14 +224,14 @@ export default function EventForm({ status }) {
 
       <div className="grid md:grid-cols-2 gap-5">
         <div>
-          <label className={labelClasses}>Date *</label>
+          <label className={labelClasses}>{status === "upcoming" ? "Date (Optional)" : "Date *"}</label>
           <input
             type="date"
             name="date"
             value={form.date}
             onChange={handleChange}
             className={inputClasses}
-            required
+            required={status !== "upcoming"}
           />
         </div>
         <div>
@@ -242,14 +247,14 @@ export default function EventForm({ status }) {
       </div>
 
       <div>
-        <label className={labelClasses}>Location *</label>
+        <label className={labelClasses}>{status === "upcoming" ? "Location (Optional)" : "Location *"}</label>
         <input
           name="location"
           value={form.location}
           onChange={handleChange}
           placeholder="Event Location"
           className={inputClasses}
-          required
+          required={status !== "upcoming"}
         />
       </div>
 
@@ -310,16 +315,6 @@ export default function EventForm({ status }) {
         </div>
       </div>
 
-      <div>
-        <label className={labelClasses}>Attendees</label>
-        <input
-          name="attendees"
-          value={form.attendees}
-          onChange={handleChange}
-          placeholder="e.g., 100+ or 50-100"
-          className={inputClasses}
-        />
-      </div>
 
       <div>
         <label className={labelClasses}>Highlights (comma-separated)</label>
