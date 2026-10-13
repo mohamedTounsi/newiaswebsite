@@ -213,7 +213,7 @@ export default function EventManager({ status, title }) {
         date: formData.date ? formData.date : null,
         end_date: formData.end_date ? formData.end_date : null,
         location: formData.location || null,
-        attendees: formData.attendees || null,
+        attendees: status !== "upcoming" ? (formData.attendees || null) : null,
         image: imageUrl,
         featured_icon_url: featuredIconUrl,
         highlights: highlightsArray,
@@ -443,7 +443,7 @@ export default function EventManager({ status, title }) {
                     {event.location && (
                       <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#238155]" /> {event.location}</span>
                     )}
-                    {event.attendees && (
+                    {status !== "upcoming" && event.attendees && (
                       <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {event.attendees} Attendees</span>
                     )}
                     {event.video_url && <span className="flex items-center gap-1.5 text-[#238155]"><Play size={12} fill="#238155" /> Recap Available</span>}
@@ -718,12 +718,47 @@ export default function EventManager({ status, title }) {
                       <textarea name="description" value={formData.description} onChange={handleChange} rows="5" placeholder="Detailed technical overview..." className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black resize-none" />
                     </div>
 
-                    <div>
-                      <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
-                         <Activity size={10} className="text-[#238155]" /> Strategic Highlights
-                      </label>
-                      <input name="highlights" value={formData.highlights} onChange={handleChange} placeholder="Comma separated, e.g. Networking, Technical, Winners" className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" />
-                    </div>
+                    {status !== "upcoming" ? (
+                      <div className="grid md:grid-cols-3 gap-8">
+                        <div>
+                          <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
+                             <Users size={10} className="text-[#238155]" /> Attendee Metrics
+                          </label>
+                          <input 
+                            name="attendees" 
+                            value={formData.attendees} 
+                            onChange={handleChange} 
+                            placeholder="e.g. 250+" 
+                            className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" 
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
+                             <Activity size={10} className="text-[#238155]" /> Strategic Highlights
+                          </label>
+                          <input 
+                            name="highlights" 
+                            value={formData.highlights} 
+                            onChange={handleChange} 
+                            placeholder="Comma separated, e.g. Networking, Technical, Winners" 
+                            className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" 
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-[9px] font-black tracking-[0.4em] uppercase text-slate-400 block mb-3 flex items-center gap-2">
+                           <Activity size={10} className="text-[#238155]" /> Strategic Highlights
+                        </label>
+                        <input 
+                          name="highlights" 
+                          value={formData.highlights} 
+                          onChange={handleChange} 
+                          placeholder="Comma separated, e.g. Networking, Technical, Winners" 
+                          className="w-full bg-white border border-slate-100 p-5 text-sm focus:ring-2 focus:ring-[#238155]/10 focus:border-[#238155] outline-none text-black" 
+                        />
+                      </div>
+                    )}
                 </div>
 
                 <div className="pt-8 border-t border-slate-100">

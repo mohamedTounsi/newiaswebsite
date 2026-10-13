@@ -2,16 +2,17 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 /* ===== HEADER ITEMS ===== */
 const headerItems = [
   { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Team", href: "/team" },
-  { name: "Events", href: "/events" },
-  { name: "Awards", href: "/awards" },
-  { name: "Contact Us", href: "/contact" },
+  { name: "About", href: "/about/" },
+  { name: "Team", href: "/team/" },
+  { name: "Events", href: "/events/" },
+  { name: "Awards", href: "/awards/" },
+  { name: "Contact Us", href: "/contact/" },
 ];
 
 export default function Header() {
@@ -19,7 +20,6 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  const router = useRouter();
   const pathname = usePathname();
   const headerRef = useRef(null);
   const topBarRef = useRef(null);
@@ -56,15 +56,12 @@ export default function Header() {
     };
   }, [scrolled]);
 
-  const handleClick = (item) => {
-    setIsMobileMenuOpen(false);
-    if (item.href) {
-      router.push(item.href);
-    }
-  };
-
-  const handleLogoClick = () => {
-    router.push("/");
+  const isActive = (href) => {
+    if (!pathname) return false;
+    const cleanPath = pathname.replace(/\/+$/, "") || "/";
+    const cleanHref = href.replace(/\/+$/, "") || "/";
+    if (cleanHref === "/") return cleanPath === "/";
+    return cleanPath === cleanHref || cleanPath.startsWith(cleanHref + "/");
   };
 
   return (
@@ -108,48 +105,54 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-16 xl:px-20 w-full flex items-center justify-between">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="flex items-center gap-3 cursor-pointer select-none"
-            onClick={handleLogoClick}
-          >
-            <img
-              src="/logoiasjdid.png"
-              alt="IEEE ISIMS SB Logo"
-              className="h-10 w-auto object-contain"
-            />
-          </motion.div>
+          <Link href="/" className="cursor-pointer select-none">
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center gap-3"
+            >
+              <img
+                src="/logoiasjdid.png"
+                alt="IEEE ISIMS SB Logo"
+                className="h-10 w-auto object-contain"
+              />
+            </motion.div>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-10">
             <nav className="flex items-center gap-8 xl:gap-10">
-              {headerItems.map((item, index) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: 0.2 + index * 0.05,
-                    duration: 0.6,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
-                  <button
-                    onClick={() => handleClick(item)}
-                    className={`relative text-[13px] uppercase tracking-[0.2em] font-light transition-all duration-300 group cursor-pointer ${pathname === item.href ? "text-[#238155] !font-bold" : "text-gray-500 hover:text-[#238155]"
-                      }`}
+              {headerItems.map((item, index) => {
+                const active = isActive(item.href);
+                return (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: 0.2 + index * 0.05,
+                      duration: 0.6,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
                   >
-                    {item.name}
-                    <span
-                      className={`absolute -bottom-1 left-0 h-[1.5px] transition-all duration-500 ${pathname === item.href ? "w-full" : "w-0 group-hover:w-full"
+                    <Link
+                      href={item.href}
+                      className={`relative text-[13px] uppercase tracking-[0.2em] font-light transition-all duration-300 group cursor-pointer inline-block ${
+                        active ? "text-[#238155] !font-bold" : "text-gray-500 hover:text-[#238155]"
+                      }`}
+                    >
+                      {item.name}
+                      <span
+                        className={`absolute -bottom-1 left-0 h-[1.5px] transition-all duration-500 ${
+                          active ? "w-full" : "w-0 group-hover:w-full"
                         }`}
-                      style={{ backgroundColor: "#238155" }}
-                    />
-                  </button>
-                </motion.div>
-              ))}
+                        style={{ backgroundColor: "#238155" }}
+                      />
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </nav>
 
             {/* CTA Button */}
@@ -253,30 +256,34 @@ export default function Header() {
               }}
             >
               <div className="px-6 py-8 flex flex-col gap-0">
-                {headerItems.map((item, index) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -8 }}
-                    transition={{
-                      delay: index * 0.04,
-                      duration: 0.4,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                  >
-                    <button
-                      onClick={() => handleClick(item)}
-                      className="w-full text-left py-4 text-[13px] uppercase tracking-[0.2em] font-light border-b transition-all duration-200 cursor-pointer"
-                      style={{
-                        color: pathname === item.href ? "#238155" : "#6aaa8a",
-                        borderColor: "rgba(35,129,85,0.07)",
+                {headerItems.map((item, index) => {
+                  const active = isActive(item.href);
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -8 }}
+                      transition={{
+                        delay: index * 0.04,
+                        duration: 0.4,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      {item.name}
-                    </button>
-                  </motion.div>
-                ))}
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="w-full block text-left py-4 text-[13px] uppercase tracking-[0.2em] font-light border-b transition-all duration-200 cursor-pointer"
+                        style={{
+                          color: active ? "#238155" : "#6aaa8a",
+                          borderColor: "rgba(35,129,85,0.07)",
+                        }}
+                      >
+                        {item.name}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
 
                 {/* Join Button */}
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLScs88ljHROjeA1s6cPe4hDa0hVTnay3an3cITlOUn8OFuAARw/viewform" target="_blank" rel="noopener noreferrer">

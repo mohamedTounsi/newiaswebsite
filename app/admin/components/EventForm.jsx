@@ -115,7 +115,7 @@ export default function EventForm({ status }) {
         location: form.location,
         description: form.description || null,
         image: imageUrl, // Use uploaded image URL
-        attendees: form.attendees || null,
+        attendees: !isUpcoming ? (form.attendees || null) : null,
         highlights: highlightsArray,
         registration_link: form.registration_link || null,
         status: status,
@@ -315,6 +315,19 @@ export default function EventForm({ status }) {
         </div>
       </div>
 
+
+      {!isUpcoming && (
+        <div>
+          <label className={labelClasses}>Attendees</label>
+          <input
+            name="attendees"
+            value={form.attendees}
+            onChange={handleChange}
+            placeholder="e.g., 100+ or 50-100"
+            className={inputClasses}
+          />
+        </div>
+      )}
 
       <div>
         <label className={labelClasses}>Highlights (comma-separated)</label>
