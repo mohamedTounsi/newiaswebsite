@@ -160,7 +160,7 @@ function MassiveEventCard({ event, index, onClick, isEven }) {
                 </div>
                 <div className="border-l-2 border-slate-100 pl-4 py-1">
                     <p className="text-[8px] font-black text-slate-300 tracking-widest uppercase mb-1">Impact</p>
-                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.attendees || "0"}+ Units</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase">{event.attendees || "0"} Units</p>
                 </div>
             </div>
         </div>
@@ -301,7 +301,7 @@ function EventModal({ event, onClose }) {
               </span>
               <div className="flex items-center gap-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 <span className="flex items-center gap-1.5"><Calendar size={12} className="text-[#238155]" /> {formatDate(event.date)}</span>
-                <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {event.attendees || "0"}+ Attendees</span>
+                <span className="flex items-center gap-1.5"><Users size={12} className="text-[#238155]" /> {event.attendees || "0"} Attendees</span>
               </div>
             </div>
             
