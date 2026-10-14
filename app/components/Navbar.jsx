@@ -156,7 +156,7 @@ export default function Header() {
             </nav>
 
             {/* CTA Button */}
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScs88ljHROjeA1s6cPe4hDa0hVTnay3an3cITlOUn8OFuAARw/viewform" target="_blank" rel="noopener noreferrer">
+            <a href="https://isims.ieee.tn/iasregister" target="_blank" rel="noopener noreferrer">
               <motion.button
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -286,7 +286,7 @@ export default function Header() {
                 })}
 
                 {/* Join Button */}
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScs88ljHROjeA1s6cPe4hDa0hVTnay3an3cITlOUn8OFuAARw/viewform" target="_blank" rel="noopener noreferrer">
+                <a href="https://isims.ieee.tn/iasregister" target="_blank" rel="noopener noreferrer">
                   <motion.button
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
